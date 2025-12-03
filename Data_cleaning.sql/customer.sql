@@ -1,6 +1,7 @@
 -- View table structure
 DESCRIBE olist_customers_dataset;
 
+
 -- Preview first 10 rows
 SELECT * FROM olist_customers_dataset LIMIT 10;
 

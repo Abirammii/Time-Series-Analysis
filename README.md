@@ -16,9 +16,10 @@ The dataset is structured into multiple tables to enhance clarity and organizati
 <img width="946" height="625" alt="image" src="https://github.com/user-attachments/assets/0586b625-6338-446a-9ab6-9b9bae5a3fbf" />
 
 ## PROJECT PIPELINE 
-- Data Collection and Data Cleaning
--  Time Series Data Pre-Processing
+1.Data Collection and Data Cleaning
+2.Time Series Data Pre-Processing
 -  Time Series Analysis Using SARIMA Model
 -  Time Series Modelling Using Facebook Prophet
 -  Challenges With Hourly Sampled Data
 -  Conclusion
+-  

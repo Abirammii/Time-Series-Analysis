@@ -55,18 +55,22 @@ The dataset is structured into multiple tables to enhance clarity and organizati
 UPDATE olist_orders_dataset
 SET order_date = STR_TO_DATE(order_purchase_timestamp, '%Y-%m-%d %H:%i:%s')
 WHERE order_purchase_timestamp IS NOT NULL AND order_purchase_timestamp != '';
+
   -- Convert order_approved_at to proper datetime format
 UPDATE olist_orders_dataset
 SET order_approved_at = STR_TO_DATE(order_approved_at, '%Y-%m-%d %H:%i:%s')
 WHERE order_approved_at IS NOT NULL AND order_approved_at != '';
+
 -- Convert delivered carrier date
 UPDATE olist_orders_dataset
 SET order_delivered_carrier_date = STR_TO_DATE(order_delivered_carrier_date, '%Y-%m-%d %H:%i:%s')
 WHERE order_delivered_carrier_date IS NOT NULL AND order_delivered_carrier_date != '';
+
 -- Convert delivered customer date
 UPDATE olist_orders_dataset
 SET order_delivered_customer_date = STR_TO_DATE(order_delivered_customer_date, '%Y-%m-%d %H:%i:%s')
 WHERE order_delivered_customer_date IS NOT NULL AND order_delivered_customer_date != '';
+
 -- Convert estimated delivery date
 UPDATE olist_orders_dataset
 SET order_estimated_delivery_date = STR_TO_DATE(order_estimated_delivery_date, '%Y-%m-%d %H:%i:%s')

@@ -462,3 +462,157 @@ sarima_forecast_series[sarima_forecast_series < 0] = 0
 
 **Plotting Forecast using baseline SARIMA**
 
+```
+plot_forecast(train_df['total_amount'], test_df['total_amount'], sarima_forecast_series)
+```
+
+<img width="700" height="500" alt="image" src="https://github.com/user-attachments/assets/7a5460f7-323d-435e-aba3-184f625091b5" />
+
+#### Observations:
+- Test data shows large revenue spikes, but the model does not replicate these extreme variations.
+- Forecasted values remain smooth and stable, indicating the model predicts the average daily pattern rather than sudden fluctuations.
+- The forecast closely follows the central tendency of the series, suggesting SARIMA is effective for baseline revenue forecasting.
+- However, the model underestimates irregular high-sales days, as they are not part of the learned seasonal or trend structure.
+
+## 4. Modelling (Facebook Prophet)
+FB Prophet is a forecasting package in Python that was developed by Facebook’s data science research team. The goal of the package is to give business users a powerful and easy-to-use tool to help forecast business results without needing to be an expert in time series analysis. We will apply this model and see how it performs.
+
+#### 4.1 Preparing data for FB Prophet
+
+Faecbook prophet needs data in a certain format to be able to process it. The input to Prophet is always a dataframe with two columns: ds and y. The ds (datestamp) column should be of a format expected by Pandas, ideally YYYY-MM-DD for a date or YYYY-MM-DD HH:MM:SS for a timestamp. The y column must be numeric, and represents the measurement here in our case it is total_amount.
+
+```
+# preparing the dataframe for fbProphet
+prophet_df = daily_data[['total_amount']].reset_index()
+
+prophet_df.rename(columns={
+    "order_purchase_timestamp": "ds",
+    "total_amount": "y"
+}, inplace=True)
+
+#using our original train_df and test_df we will convert them into prophet train andt test set.
+prophet_train = train_df["total_amount"].reset_index()
+prophet_train.rename(columns={"order_purchase_timestamp": "ds", "total_amount": "y"}, inplace=True)
+prophet_test = test_df["total_amount"].reset_index()
+prophet_test.rename(columns={"order_purchase_timestamp": "ds", "total_amount": "y"}, inplace=True)
+```
+
+#### 4.2 Applying a Baseline FB Prophet
+Since we observed that our data has positive trend and seasonality, we will set growth ='linear' and let the model find out appropriate seasonality by making yearly_seaonality, daily_seasonality and weekly_seasonality = True.
+
+```
+#instantiate the model
+fb_baseline = Prophet(growth='linear', 
+                yearly_seasonality=True, 
+                daily_seasonality=True, 
+                weekly_seasonality=True)
+fb_baseline.fit(prophet_train)
+```
+
+**Predictions using baseline Prophet**
+
+```
+#make predictions dataframe 
+future_base = fb_baseline.make_future_dataframe(periods=len(test_df), freq="D")
+#make a forecast
+forecast_base = fb_baseline.predict(future_base)
+forecast_base[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail()
+```
+
+<img width="391" height="172" alt="image" src="https://github.com/user-attachments/assets/a5120e40-50ee-4292-b5e8-c734ee435af8" />
+
+### 4.3 Plotting and Evaluating Baseline model
+
+```
+# Safe MAPE
+fb_baseline_mape = mape_safe(
+    prophet_test['y'],
+    forecast_base[-len(prophet_test):].reset_index()['yhat']
+)
+
+# RMSE
+fb_baseline_rmse = rmse_metrics(
+    prophet_test['y'],
+    forecast_base[-len(prophet_test):].reset_index()['yhat']
+)
+
+print(f'RMSE: {fb_baseline_rmse}')
+print(f'MAPE (decimal): {fb_baseline_mape}')
+```
+
+<img width="278" height="72" alt="image" src="https://github.com/user-attachments/assets/929fd185-3c6b-4a06-a79e-e8e254f70615" />
+
+**Plotting the forecast using Baseline FB Prophet**
+
+```
+from prophet.plot import plot_plotly
+
+fig = plot_plotly(fb_baseline, forecast_base) 
+fig.update_layout(
+    title="Daily Sales amount",
+    xaxis_title="Date",
+    yaxis_title="Revenue amount"
+    )
+# fig.show()
+fig.show("svg")
+```
+
+<img width="900" height="600" alt="image" src="https://github.com/user-attachments/assets/821c4276-0de7-45b5-a93f-42f3e022e3b9" />
+
+## Observation:
+- Although Prophet did not achieve strong MAPE or RMSE scores, the forecast plot shows that the model successfully captures the overall trend, seasonal patterns, and the general direction of daily revenue. However, it struggles to reproduce the sharp spikes and extreme peaks present in the actual data. Further improvements can be made by tuning hyperparameters and including holiday effects to better model unusually high-revenue days.
+
+### 4.4 Tuning FB Prophet using Grid Search
+
+```
+
+# 1. ALIGN FORECAST WITH TEST SET
+merged = prophet_test.merge(
+    forecast_base_holi[['ds', 'yhat']],
+    on='ds',
+    how='left'
+)
+# 2. DEFINE RMSE + SMAPE METRICS
+def rmse_metrics(y_true, y_pred):
+    return np.sqrt(np.mean((y_true - y_pred) ** 2))
+
+def smape(y_true, y_pred):
+    return 100 * np.mean(
+        2 * np.abs(y_pred - y_true) / (np.abs(y_true) + np.abs(y_pred))
+    )
+# Define MAPE but avoid INF
+def mape_safe(y_true, y_pred):
+    y_true = np.where(y_true == 0, 1e-5, y_true)  # avoid division by zero
+    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+# 3. CALCULATE METRICS
+fb_baseline_holi_rmse = rmse_metrics(merged['y'], merged['yhat'])
+fb_baseline_holi_smape = smape(merged['y'], merged['yhat'])
+fb_baseline_holi_mape = mape_safe(merged['y'], merged['yhat'])  
+# 4. PRINT RESULTS
+print("Prophet with Holidays — Evaluation Metrics")
+print("-------------------------------------------")
+print(f"RMSE : {fb_baseline_holi_rmse}")
+print(f"SMAPE: {fb_baseline_holi_smape}")
+print(f"MAPE (safe): {fb_baseline_holi_mape}")
+```
+<img width="347" height="119" alt="image" src="https://github.com/user-attachments/assets/df3abdf3-31f0-402a-a04d-491c1469e684" />
+
+## 5. Challenges with Hourly Resampled Data
+To increase the number of data points, I attempted to resample the dataset at an hourly frequency. However, this introduced many zero values during hours with no orders, making the series sparse and irregular. Applying SARIMA on this hourly data produced negative predictions and a declining trend. After further research and guidance, I found that such data requires additional transformations or alternative modeling techniques. Therefore, I chose to proceed using the daily data instead.
+
+### 8.Conclusion
+Here is the summary of all the models we tested:
+### Summary:
+
+| Model                      | RMSE     | MAPE  |
+|----------------------------|----------|-------|
+| SARIMA(1,1,1)(0,1,1)(7)    | 462.0464 |87025914.42
+| Baseline Prophet           | 456.169  |77407789.89
+|Baseline Prophet with holiday|455.088  |756639567.89
+
+We choose the Prophet model with holiday effects as the best-performing model because it achieves the lowest error (lowest MAPE and RMSE) among all models.
+
+
+
+
+

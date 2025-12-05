@@ -105,7 +105,7 @@ CHANGE COLUMN order_item_id qty INT;
 - There are no duplicate rows, although certain product attributes may vary due to differences in seller inputs.
 
 
-## Merging All Tables
+### Merging All Tables
 
 - After completing the cleaning steps for each dataset, all tables were merged to create a comprehensive master dataset for analysis. The merging process was performed in SQL by joining tables on their corresponding primary and foreign keys, such as customer_id, order_id, product_id, and seller_id.
 
@@ -117,4 +117,47 @@ where *price* represents the unit price of an item and *qty* (renamed from order
 - Creating column ```total_amount```= ```(oi.qty * oi.price) AS total_amount```
 
 - The final merged dataset was validated for consistency, ensuring there were no duplicates, missing values, or conflicting entries. This consolidated master dataset serves as the foundation for all further preprocessing, exploratory analysis, and model development.
+
+  ### Scraping Holiday Data
+
+To improve the accuracy of sales forecasting, holiday information was collected since holidays can significantly influence purchasing behavior. A simple web scraping approach was used to extract Brazilian national holidays from the specified [website](https://www.officeholidays.com/countries/brazil/).
+
+By appending the base URL with the years **2017** and **2018**, we retrieved the corresponding pages containing holiday data for those years and incorporated them into the time series modeling process.
+
+```
+  # For web scraping (the requests package allows you to send HTTP requests using Python)
+import requests
+from bs4 import BeautifulSoup
+
+# For performing regex operations
+import re
+
+# For adding delays so that we don't spam requests
+import time
+#define empty dictionary to save content
+content={}
+
+#scaping holiday information for pages 2017 and 2018
+for i in [2017, 2018]:
+    url = 'https://www.officeholidays.com/countries/brazil/'
+    url = url+str(i)
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content)
+    content[i]=soup.find_all('time')
+
+#extracting Holiday information from the scarpped data
+#empty list
+holidays=[]
+for key in content:
+    dict_size=len(content[key])
+    dict_val=content[key]
+    for j in range(0,dict_size):
+        holidays.append(dict_val[j].attrs['datetime'])
+
+#creating a dataframe for the holiday information
+holidays_df=pd.DataFrame(index=[holidays], data=np.ones(len(holidays)), columns=['is_holiday'])
+holidays_df.head()
+```
+
+
 

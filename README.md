@@ -162,3 +162,125 @@ holidays_df.head()
 - This dataframe has only one column 'is_holiday' which is one meaning it is an holiday. The index are the dates of the holiday.
 - These dates are for year 2017 and 2018. The index is not continuous, these are just the holiday dates. We have saved the data like this so that we can use it for time series.
 
+ ## 2. TIME SERIES DATA PRE-PROCESSING
+ We have a total of 1000 rows of orders with 21 features, I am specifying all the high level details about the data which we extracted during data cleaning and wrangling. Each row in the table specifies a order with the product category bought, quantity of item purchased, unit price of the product and has details about purchase time, delivery details, customer and seller information.
+ - order_id : Specifies the unique order. We have 95832 unique orders. Of 110K rows an order_id can reappear in the- dataframe but it will have another product category and number of items bought in that category.
+- customer_id: Specifies the customer id for the order. We have a customer ids associated with each order. There are a total of 95832 unique customer ids.
+- order_purchase_timestamp : The time stamp for the order. It includes date and time.
+- order_estimated_delivery_date : Estimated delivery date at the time of purchase.
+- product_id : This specify the actual product in a product category. We have 32072 unique products within 74 overall product categories.
+- seller_id : We have 2965 unique sellers.
+- freight_value : The freight charges based on product weight and dimension. This value is for one item. If there are three items the total freight will be equal to three times the freight_value.
+- product_name_lenght : Number of characters extracted from the product name.
+- product_description_lenght : Number of characters extracted from the product description.
+- product_photos_qty : Number of product published photos.
+- product_weight_g : Product weight measured in grams.
+- product_length_cm : Product length measured in centimeters.
+- product_height_cm : Product height measured in centimeters.
+- product_width_cm : Product width measured in centimeters.
+- seller_city : It is the city where seller is located.
+- seller_state : It is the state where seller is located.
+- customer_unique_id : There are 92755 unique customers which make up 96.79 % of the total customers in database. Only 3.21% of the customers have made repeat purchase. It may be because the data we have is the initial data when Olist had just started its business and therefore we have all the new customers in the database.
+- customer_city : It is the city where customer is located.
+- customer_state : It is the state where customer is located.
+- qty : Number of items bought in a product category.
+- price : Unit price for each product.
+Target Variable : total_amount : We have calculated this value after multiplying qty and price. This is the actual sales amount important for the business. We will be predicting sales amount to help business prepare for the the future.
+- ```Target Variable``` : total_amount : We have calculated this value after multiplying qty and price. This is the actual sales amount important for the business. We will be predicting sales amount to help business prepare for the the future.
+
+### Processing Data for Time Series
+- ```order_purchase_timestamp``` has incorrect format column. Let's start converting this column to date-time format and  try to extract some features from dates for analysis.
+- let's extract year, date, month , weekday and day information from the dates.
+
+```
+#converting date columns which are in object format to datetime format
+df['purchase_year']=pd.to_datetime(df['order_purchase_timestamp']).dt.year
+df['purchase_month']=pd.to_datetime(df['order_purchase_timestamp']).dt.month
+df['purchase_MMYYYY']=pd.to_datetime(df['order_purchase_timestamp']).dt.strftime('%m-%Y')
+df['purchase_week']=pd.to_datetime(df['order_purchase_timestamp']).dt.isocalendar().week
+df['purchase_dayofweek']=pd.to_datetime(df['order_purchase_timestamp']).dt.weekday
+df['purchase_dayofmonth']=pd.to_datetime(df['order_purchase_timestamp']).dt.day
+```
+
+Aggregate the total_amount by dates so that we can get a time series, meaning a dataframe with the total_amount column arranged in order as per dates. Let's set the dates as index.
+
+### Exploratory Data Analysis
+#### 1. Heatmap:
+heat map to see which numerical features are highly correlated with the total_amount. This is just a high level overview to see which features can impact sales and also the correlation among the features.
+<Figure size 1800x1200 with 2 Axes><img width="1491" height="1140" alt="image" src="https://github.com/user-attachments/assets/7b64c5e7-6874-4917-8e6d-faf24d4646ae" />
+
+#### Observations:
+- Price shows the strongest positive correlation with total sales amount.
+- Freight value has a moderate positive relationship with total amount, indicating higher shipping cost for higher-value items.
+- Product dimensions (length, height, width) are moderately correlated with freight value.
+- Quantity shows only a weak correlation with total amount, suggesting most orders contain single units.
+- Date-related features (year, month, week, day) have very weak correlations, indicating no strong linear time-based influence.
+
+#### 2. Histogram:
+- histogram to see the distribution of total_amount.
+  <img width="700" height="500" alt="image" src="https://github.com/user-attachments/assets/1d1f015d-37a9-42a1-9488-fe0a897784a7" />
+  
+  **Observation:**
+- The daily revenue distribution is highly right-skewed, with most days generating low to moderate sales and only a few days showing very high revenue spikes. 
+- This indicates high variability and the presence of outlier sales days.
+
+#### 3. Decomposing time series
+- We will be decomposing the time series using additive decomposition so that we can observe the underlying trend, seasonality and residuals.
+- Additive Decomposition : Trend + Seasonality + Residual
+
+```
+# decompose the time series
+decomposition = tsa.seasonal_decompose(daily_data, model='additive')
+# saving copy to new datafrme
+daily_df=daily_data.copy()
+# add the decomposition data
+daily_df['Trend'] = decomposition.trend
+daily_df['Seasonal'] = decomposition.seasonal
+daily_df['Residual'] = decomposition.resid
+```
+
+```
+#plotting the actual and decomposed componenets of time series
+cols = ["total_amount","Trend", "Seasonal", "Residual"]
+
+fig = make_subplots(rows=4, cols=1, subplot_titles=cols)
+
+for i, col in enumerate(cols):
+    fig.add_trace(
+        go.Scatter(x=daily_df.index, y=daily_df[col]),
+        row=i+1,
+        col=1
+    )
+
+fig.update_layout(height=1200, width=1200, showlegend=False)
+# fig.show()
+fig.show("svg")
+```
+
+<img width="1200" height="1200" alt="image" src="https://github.com/user-attachments/assets/ad8aec70-f6bb-451a-a334-d7602b7884a6" />
+
+#### Observation:
+- Trend component shows a steady upward movement, indicating consistent growth in daily revenue over time.
+
+- Seasonal component is strong and repetitive, suggesting clear recurring daily or weekly patterns in sales.
+
+- Residual component captures irregular spikes, reflecting unexpected high-revenue days or one-off events.
+
+- The original series aligns well with the trend + seasonality, confirming that the data has structured patterns.
+
+- High residual variability in 2018 suggests increasing unpredictability alongside business growth.
+
+#### Preparing for Modeling
+1. Train and test split
+2. Defining functions for plotting predictions and forecast
+3. Defining functions for evaluation
+MAPE (Mean Absolute Percentage Error): It is a simple average of absolute percentage errors. It is calculated by
+![image.png](attachment:image.png)
+RMSE (Root Mean Sqaured Error) : It is the square root of the average of the squared difference between the original and predicted values in the data set:
+RMSE (Root Mean Sqaured Error) : It is the square root of the average of the squared difference between the original and predicted values in the data set:
+![image.png](attachment:image.png)
+
+## 3. MODELLING
+ 
+
+

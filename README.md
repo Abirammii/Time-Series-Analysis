@@ -405,7 +405,7 @@ pred_end_date = test_df.index[-1]
 sarima_predictions = sarima_model_fit.predict(start=pred_start_date, end=pred_end_date)
 sarima_residuals = test_df['total_amount'] - sarima_predictions
 ```
-***Evaluation of SARIMA**
+**Evaluation of SARIMA**
 
 ```
 import numpy as np
@@ -442,6 +442,7 @@ print(f"RMSE: {sarima_rmse:.4f}")
 print(f"MAPE (decimal): {sarima_mape:.4f}")
 print(f"SMAPE (decimal): {sarima_smape:.4f}")
 ```
+
 <img width="222" height="50" alt="image" src="https://github.com/user-attachments/assets/c8b08c1f-e0bf-46d0-84fd-bb7da9631c89" />
 
 

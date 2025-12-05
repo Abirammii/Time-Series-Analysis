@@ -275,9 +275,11 @@ fig.show("svg")
 2. Defining functions for plotting predictions and forecast
 3. Defining functions for evaluation
 MAPE (Mean Absolute Percentage Error): It is a simple average of absolute percentage errors. It is calculated by
+
 <img width="291" height="92" alt="image" src="https://github.com/user-attachments/assets/b432228c-63bd-451e-aea9-d3ab1ce4c5bf" />
 
 RMSE (Root Mean Sqaured Error) : It is the square root of the average of the squared difference between the original and predicted values in the data set:
+
 <img width="312" height="125" alt="image" src="https://github.com/user-attachments/assets/b0d46809-ba6c-414a-853e-817c5ff8734d" />
 
 ## 3. TIME SERIES ANALYSIS USING MODELLING
@@ -367,7 +369,8 @@ Where:
 - Here we go:
 
 
-    ![image.png](attachment:image.png)
+  <img width="212" height="44" alt="image" src="https://github.com/user-attachments/assets/c92592c2-501d-4407-aa8f-a8e83c38db29" />
+
 
   #### Baseline Sarima Model
 

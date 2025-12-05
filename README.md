@@ -17,8 +17,8 @@ The dataset is structured into multiple tables to enhance clarity and organizati
 
 ## PROJECT PIPELINE
 
-#### 1. Data Collection and Pre-Processing
-#### 2. Time Series Data Pre-Processing
+ 1. Data Collection and Pre-Processing
+ 2. Time Series Data Pre-Processing
 #### 3. Time Series Analysis Using SARIMA Model
 #### 4. Time Series Modelling Using Facebook Prophet
 #### 5. Challenges With Hourly Sampled Data

@@ -275,10 +275,10 @@ fig.show("svg")
 2. Defining functions for plotting predictions and forecast
 3. Defining functions for evaluation
 MAPE (Mean Absolute Percentage Error): It is a simple average of absolute percentage errors. It is calculated by
-![image.png](attachment:image.png)
+<img width="291" height="92" alt="image" src="https://github.com/user-attachments/assets/b432228c-63bd-451e-aea9-d3ab1ce4c5bf" />
+
 RMSE (Root Mean Sqaured Error) : It is the square root of the average of the squared difference between the original and predicted values in the data set:
-RMSE (Root Mean Sqaured Error) : It is the square root of the average of the squared difference between the original and predicted values in the data set:
-![image.png](attachment:image.png)
+<img width="312" height="125" alt="image" src="https://github.com/user-attachments/assets/b0d46809-ba6c-414a-853e-817c5ff8734d" />
 
 ## 3. TIME SERIES ANALYSIS USING MODELLING
  We will start with SARIMA model to account for the seasonality in our model. SARIMA is Seasonal Autoregressive Integrated Moving Average, which explicitly supports univariate time series data with a seasonal component. Before jumping on to modelling, we need to get a basic understanding of what orders for Auto gregressive and Moving average to choose. We will plot the ACF and PACF plots to find it out.
@@ -343,7 +343,7 @@ The ACF and PACF plots of the double-differenced series show no strong autocorre
 ### 3.2 Applying SARIMA model
 The SARIMA model is specified
 
-![image-2.png](attachment:image-2.png)
+<img width="224" height="59" alt="image" src="https://github.com/user-attachments/assets/561d6d41-b69d-4664-8b29-df4a68140431" />
 
 Where:
 
@@ -439,20 +439,20 @@ print(f"RMSE: {sarima_rmse:.4f}")
 print(f"MAPE (decimal): {sarima_mape:.4f}")
 print(f"SMAPE (decimal): {sarima_smape:.4f}")
 ```
+<img width="222" height="50" alt="image" src="https://github.com/user-attachments/assets/c8b08c1f-e0bf-46d0-84fd-bb7da9631c89" />
 
-<img width="286" height="73" alt="image" src="https://github.com/user-attachments/assets/1efc204d-df0c-43a9-8bc7-d49ec5bac8a7" />
 
 **Sarima Forecast**
 - We will try to forecast the sales for next 180 days. We have the 121 days known from our test data and we will try to see what our model forcasts for next 60 days.
 
-  ```
-  #Forecast Window
+```
+#Forecast Window
 days = 180
 
 sarima_forecast = sarima_model_fit.forecast(days)
 sarima_forecast_series = pd.Series(sarima_forecast, index=sarima_forecast.index)
 
-  #Since negative orders are not possible we can trim them.
+#Since negative orders are not possible we can trim them.
 sarima_forecast_series[sarima_forecast_series < 0] = 0
 ```
 

@@ -105,5 +105,16 @@ CHANGE COLUMN order_item_id qty INT;
 - There are no duplicate rows, although certain product attributes may vary due to differences in seller inputs.
 
 
+## Merging All Tables
 
+- After completing the cleaning steps for each dataset, all tables were merged to create a comprehensive master dataset for analysis. The merging process was performed in SQL by joining tables on their corresponding primary and foreign keys, such as customer_id, order_id, product_id, and seller_id.
+
+- During the merge, only the essential fields were retained—such as order details, product attributes, seller information, freight value, quantity (qty), and cleaned date fields—to keep the dataset optimized for time series forecasting. Redundant or unused columns were removed to maintain efficiency and clarity.
+
+- Additionally, based on insights from the Kaggle documentation, the **total_amount** was calculated using:
+**total_amount = qty * price**,  
+where *price* represents the unit price of an item and *qty* (renamed from order_item_id) indicates the number of units purchased.
+- Creating column ```total_amount```= ```(oi.qty * oi.price) AS total_amount```
+
+- The final merged dataset was validated for consistency, ensuring there were no duplicates, missing values, or conflicting entries. This consolidated master dataset serves as the foundation for all further preprocessing, exploratory analysis, and model development.
 

@@ -443,7 +443,8 @@ print(f"MAPE (decimal): {sarima_mape:.4f}")
 print(f"SMAPE (decimal): {sarima_smape:.4f}")
 ```
 
-<img width="222" height="50" alt="image" src="https://github.com/user-attachments/assets/c8b08c1f-e0bf-46d0-84fd-bb7da9631c89" />
+<img width="253" height="88" alt="image" src="https://github.com/user-attachments/assets/0ffcc92e-b95e-4688-9c7d-9f56696d6076" />
+
 
 
 **Sarima Forecast**

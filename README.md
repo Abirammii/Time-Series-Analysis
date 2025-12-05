@@ -50,12 +50,13 @@ The dataset is structured into multiple tables to enhance clarity and organizati
 - The Orders dataset contains detailed information about each order, including the customer ID, order status, purchase timestamp, and both actual and estimated delivery dates.
 - It includes 99,441 unique order IDs, which act as the primary key for this table.
 - The dataset consists of eight columns stored as object datatype, including five date-related columns that need to be converted into proper datetime format during preprocessing.
-  ```
-  -- Convert order_purchase_timestamp to datetime format (into new column: order_date)
+  
+```
+
+-- Convert order_purchase_timestamp to datetime format (into new column: order_date)
 UPDATE olist_orders_dataset
 SET order_date = STR_TO_DATE(order_purchase_timestamp, '%Y-%m-%d %H:%i:%s')
 WHERE order_purchase_timestamp IS NOT NULL AND order_purchase_timestamp != '';
-```
 
   -- Convert order_approved_at to proper datetime format
 UPDATE olist_orders_dataset

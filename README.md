@@ -23,3 +23,59 @@ The dataset is structured into multiple tables to enhance clarity and organizati
  4. Time Series Modelling Using Facebook Prophet
  5. Challenges With Hourly Sampled Data
  6. Conclusion
+## 1. DATA COLLECTION AND DATA CLEANING
+
+- I began by loading all the datasets individually and performed the following tasks:
+  - Reviewed the data dictionary to understand the numerical and categorical columns.
+  - Corrected inconsistent or improperly formatted data types.
+  - Cleaned the data by removing redundant columns, imputing missing values, and eliminating duplicate rows and columns.
+ 
+    ### 1. Customers Dataset 
+
+- This dataset contains customer geolocation-related information along with unique customer identifiers. A total of 99,441 customer IDs are recorded, which act as transaction-based identifiers generated whenever a purchase is made.
+- Out of these, 96,096 are unique customers,indicating that approximately 96.6% of customers made a single purchase, while only 3.4% made repeat purchases. This aligns with the fact that Olist was still in its early growth phase during 2016–2018.
+- The dataset consists of four columns with object datatype and one numeric column.  
+- There are no duplicate rows or columns, and no missing values present.
+- The zipcode column was removed, as geolocation data was not used in the analysis and was therefore unnecessary for further processing.
+
+  ### 2. Sellers Dataset 
+
+- The dataset contains 3,095 unique seller IDs, which serve as the primary key for this table.
+- It consists of three columns with object datatype and one numeric column.
+- There are no duplicate rows or columns, ensuring data integrity.
+- The dataset contains no missing values, making it clean and ready for use without additional preprocessing.
+
+  ### 6. Orders Dataset
+
+- The Orders dataset contains detailed information about each order, including the customer ID, order status, purchase timestamp, and both actual and estimated delivery dates.
+- It includes 99,441 unique order IDs, which act as the primary key for this table.
+- The dataset consists of eight columns stored as object datatype, including five date-related columns that need to be converted into proper datetime format during preprocessing.
+  ```
+  -- Convert order_purchase_timestamp to datetime format (into new column: order_date)
+UPDATE olist_orders_dataset
+SET order_date = STR_TO_DATE(order_purchase_timestamp, '%Y-%m-%d %H:%i:%s')
+WHERE order_purchase_timestamp IS NOT NULL AND order_purchase_timestamp != '';
+  -- Convert order_approved_at to proper datetime format
+UPDATE olist_orders_dataset
+SET order_approved_at = STR_TO_DATE(order_approved_at, '%Y-%m-%d %H:%i:%s')
+WHERE order_approved_at IS NOT NULL AND order_approved_at != '';
+-- Convert delivered carrier date
+UPDATE olist_orders_dataset
+SET order_delivered_carrier_date = STR_TO_DATE(order_delivered_carrier_date, '%Y-%m-%d %H:%i:%s')
+WHERE order_delivered_carrier_date IS NOT NULL AND order_delivered_carrier_date != '';
+-- Convert delivered customer date
+UPDATE olist_orders_dataset
+SET order_delivered_customer_date = STR_TO_DATE(order_delivered_customer_date, '%Y-%m-%d %H:%i:%s')
+WHERE order_delivered_customer_date IS NOT NULL AND order_delivered_customer_date != '';
+-- Convert estimated delivery date
+UPDATE olist_orders_dataset
+SET order_estimated_delivery_date = STR_TO_DATE(order_estimated_delivery_date, '%Y-%m-%d %H:%i:%s')
+WHERE order_estimated_delivery_date IS NOT NULL AND order_estimated_delivery_date != '';
+```
+
+- For the final merged master dataset, only the following fields were retained:  
+  order_id, order_purchase_timestamp, and order_estimated_delivery_date  all of which contain no missing values.
+
+
+
+

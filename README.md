@@ -30,7 +30,7 @@ The dataset is structured into multiple tables to enhance clarity and organizati
   - Corrected inconsistent or improperly formatted data types.
   - Cleaned the data by removing redundant columns, imputing missing values, and eliminating duplicate rows and columns.
  
-    ### 1. Customers Dataset 
+  ### 1. Customers Dataset 
 
 - This dataset contains customer geolocation-related information along with unique customer identifiers. A total of 99,441 customer IDs are recorded, which act as transaction-based identifiers generated whenever a purchase is made.
 - Out of these, 96,096 are unique customers,indicating that approximately 96.6% of customers made a single purchase, while only 3.4% made repeat purchases. This aligns with the fact that Olist was still in its early growth phase during 2016–2018.
@@ -45,7 +45,7 @@ The dataset is structured into multiple tables to enhance clarity and organizati
 - There are no duplicate rows or columns, ensuring data integrity.
 - The dataset contains no missing values, making it clean and ready for use without additional preprocessing.
 
-  ### 6. Orders Dataset
+  ### 3. Orders Dataset
 
 - The Orders dataset contains detailed information about each order, including the customer ID, order status, purchase timestamp, and both actual and estimated delivery dates.
 - It includes 99,441 unique order IDs, which act as the primary key for this table.
@@ -81,6 +81,28 @@ WHERE order_estimated_delivery_date IS NOT NULL AND order_estimated_delivery_dat
 
 - For the final merged master dataset, only the following fields were retained:  
   order_id, order_purchase_timestamp, and order_estimated_delivery_date  all of which contain no missing values.
+  
+### 4. Order Items Dataset 
+
+- The Order Items dataset provides detailed information about each item within an order, including the quantity of items purchased renamed from **order_item_id** to **qty**, the shipping limit date, and the freight value.
+
+```
+-- Rename order_item_id column to qty
+ALTER TABLE olist_order_items_dataset
+CHANGE COLUMN order_item_id qty INT;
+```
+
+- The dataset includes four object-type columns and three numeric columns.
+- There are no duplicate rows or columns, and the dataset contains no missing values.
+
+
+### 5. Products Dataset 
+
+- The Products dataset contains detailed attributes for each product, including product category, name length, description length, number of photos, weight, and physical dimensions.
+- It includes 32,951 unique product IDs, which serve as the primary key for this table.
+- The dataset consists of several numeric columns (weight, height, length, width) and object-type columns (such as product category name).
+- Some columns contain missing values, particularly in product dimensions and weights. Since only 2% of the data was missing, these columns were removed instead of imputed to maintain dataset consistency.
+- There are no duplicate rows, although certain product attributes may vary due to differences in seller inputs.
 
 
 

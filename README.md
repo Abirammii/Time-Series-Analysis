@@ -55,6 +55,7 @@ The dataset is structured into multiple tables to enhance clarity and organizati
 UPDATE olist_orders_dataset
 SET order_date = STR_TO_DATE(order_purchase_timestamp, '%Y-%m-%d %H:%i:%s')
 WHERE order_purchase_timestamp IS NOT NULL AND order_purchase_timestamp != '';
+```
 
   -- Convert order_approved_at to proper datetime format
 UPDATE olist_orders_dataset

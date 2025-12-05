@@ -280,7 +280,182 @@ RMSE (Root Mean Sqaured Error) : It is the square root of the average of the squ
 RMSE (Root Mean Sqaured Error) : It is the square root of the average of the squared difference between the original and predicted values in the data set:
 ![image.png](attachment:image.png)
 
-## 3. MODELLING
- 
+## 3. TIME SERIES ANALYSIS USING MODELLING
+ We will start with SARIMA model to account for the seasonality in our model. SARIMA is Seasonal Autoregressive Integrated Moving Average, which explicitly supports univariate time series data with a seasonal component. Before jumping on to modelling, we need to get a basic understanding of what orders for Auto gregressive and Moving average to choose. We will plot the ACF and PACF plots to find it out.
 
+ACF : Auto correlation function, describes correlation between original and lagged series. PACF : Partial correlation function is same as ACF but it removes all intermediary effects of shorter lags, leaving only the direct effect visible.
+
+### 3.1 Plotting ACF and PACF plot
+
+```
+def plot_acf_pacf(df, acf_lags: int, pacf_lags: int) -> None:
+    """
+    This function plots the Autocorrelation and Partial Autocorrelation lags.
+    ---
+    Args:
+        df (pd.DataFrame): Dataframe contains the order count and dates.
+        acf_lags (int): Number of ACF lags
+        pacf_lags (int): Number of PACF lags
+    Returns: None
+    """
+    
+    # Figure
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,9), facecolor='w')
+    
+    # ACF & PACF
+    plot_acf(df, ax=ax1, lags=acf_lags)
+    plot_pacf(df, ax=ax2, lags=pacf_lags, method='ywm')
+
+    # Labels
+    ax1.set_title(f"Autocorrelation {df.name}", fontsize=15, pad=10)
+    ax1.set_ylabel("Sales amount", fontsize=12)
+    ax1.set_xlabel("Lags (Days)", fontsize=12)
+
+    ax2.set_title(f"Partial Autocorrelation {df.name}", fontsize=15, pad=10)
+    ax2.set_ylabel("Sales amount", fontsize=12)
+    ax2.set_xlabel("Lags (Days)", fontsize=12)
+    
+    # Legend & Grid
+    ax1.grid(linestyle=":", color='grey')
+    ax2.grid(linestyle=":", color='grey')
+
+    plt.show()
+    # plotting the ACF and PACF plot for original series
+    plot_acf_pacf(daily_df['total_amount'], acf_lags=56, pacf_lags= 56)
+```
+<Figure size 1600x900 with 2 Axes><img width="1332" height="789" alt="image" src="https://github.com/user-attachments/assets/7b040c3b-0057-40d1-8825-bfd8aa558973" />
+  
+#### Observation:
+The ACF of the original series shows strong autocorrelation with a slow decay, confirming that the data is non-stationary. The PACF spike at lag 1 further indicates short-term dependence, reinforcing the need for differencing before modeling.
+
+```
+#double differencing the column total_amount
+daily_df['double_difference'] = daily_df['day_difference'].diff(7)
+#plotting the ACF and PACF plot for double differenced series
+plot_acf_pacf(daily_df['double_difference'].dropna(), acf_lags=56, pacf_lags= 56)
+```
+
+<Figure size 1600x900 with 2 Axes><img width="1332" height="789" alt="image" src="https://github.com/user-attachments/assets/4def0cd2-dce6-4c2b-84ac-e09b4a5b27a6" />
+
+#### Observation
+The ACF and PACF plots of the double-differenced series show no strong autocorrelation, with most spikes falling within confidence limits. This indicates that the series is sufficiently stationary and behaves close to white noise, confirming that no further differencing is required.
+
+### 3.2 Applying SARIMA model
+The SARIMA model is specified
+
+![image-2.png](attachment:image-2.png)
+
+Where:
+
+- Trend Elements are:
+  - p: Autoregressive order
+  - d: Difference order
+  - q: Moving average order
+- Seasonal Elements are:
+  - P: Seasonal autoregressive order.
+  - D: Seasonal difference order. D=1 would calculate a first order seasonal difference
+  - Q: Seasonal moving average order. Q=1 would use a first order errors in the model
+  - s: Single seasonal period
+- Theoretical estimates:
+  - s: In our PACF plot there is peak that reappears every 7 days. Thus, we can set seasonal period to s = 7. This also backed by our seasonal component after additive decomposition.
+  - p: We observed that there is some tappering in ACF plot and we found the significant lags of 1,2,3 from PACF plot. We can start with p=1 and see how it works.
+  - d: We observed that our series has some trend, so we can remove it by differencing, so d = 1.
+  - q: Based on our ACF correlations we can set q = 1 since its the most significant lag.
+  - P: P = 0 as we are using ACF plot to find seasonl significant lag.
+  - D: Since we are dealing with seasonality and we need to differnce the series, D = 1
+  - Q: The seasonal moving average will be set to Q = 1 as we found only one significant seasonal lag in ACF plot. 
+- Here we go:
+
+
+    ![image.png](attachment:image.png)
+
+  #### Baseline Sarima Model
+
+```
+#Set Hyper-parameters
+p, d, q = 1, 1, 1
+P, D, Q = 0, 1, 1
+s = 7
+
+#Fit SARIMA
+sarima_model = SARIMAX(train_df['total_amount'], order=(p, d, q), seasonal_order=(P, D, Q, s))
+sarima_model_fit = sarima_model.fit(disp=0)
+print(sarima_model_fit.summary())
+```
+
+<Figure size 1600x700 with 4 Axes><img width="1311" height="627" alt="image" src="https://github.com/user-attachments/assets/79aeabb8-2a4d-46d3-89be-6099c8a776f4" />
+
+#### Observations
+- Residuals fluctuate around zero with no clear pattern, indicating that the model has captured most of the signal.
+- The histogram shows a roughly centered distribution, though slightly skewed, suggesting mild deviation from perfect normality.
+- The Q–Q plot shows reasonable alignment with the theoretical line, with only a few outliers in the upper tail.
+- The residual correlogram shows no significant autocorrelation, confirming that the residuals behave like white noise.
+
+### 3.3 Plotting predictions and evaluating SARIMA model
+**Prediction using SARIMA**
+
+```
+# defining prediction period
+pred_start_date = test_df.index[0]
+pred_end_date = test_df.index[-1]
+
+sarima_predictions = sarima_model_fit.predict(start=pred_start_date, end=pred_end_date)
+sarima_residuals = test_df['total_amount'] - sarima_predictions
+```
+***Evaluation of SARIMA**
+
+```
+import numpy as np
+from sklearn.metrics import mean_squared_error
+
+
+# RMSE
+def rmse_metrics(y_true, y_pred):
+    return np.sqrt(mean_squared_error(y_true, y_pred))
+
+
+
+# SAFE MAPE (NOT percent)
+# Example: 0.12 instead of 12%
+def mape_safe(y_true, y_pred):
+    y_true_safe = y_true.replace(0, 1e-6)  # avoid division by zero
+    return np.mean(np.abs((y_true_safe - y_pred) / y_true_safe))
+
+
+# SMAPE (NOT percent)
+# Example: 0.15 instead of 15%
+def smape(y_true, y_pred):
+    numerator = np.abs(y_pred - y_true)
+    denominator = (np.abs(y_true) + np.abs(y_pred)) / 2
+    return np.mean(numerator / denominator)
+
+
+# EVALUATION
+sarima_rmse = rmse_metrics(test_df['total_amount'], sarima_predictions)
+sarima_mape = mape_safe(test_df['total_amount'], sarima_predictions)
+sarima_smape = smape(test_df['total_amount'], sarima_predictions)
+
+print(f"RMSE: {sarima_rmse:.4f}")
+print(f"MAPE (decimal): {sarima_mape:.4f}")
+print(f"SMAPE (decimal): {sarima_smape:.4f}")
+```
+
+<img width="286" height="73" alt="image" src="https://github.com/user-attachments/assets/1efc204d-df0c-43a9-8bc7-d49ec5bac8a7" />
+
+**Sarima Forecast**
+- We will try to forecast the sales for next 180 days. We have the 121 days known from our test data and we will try to see what our model forcasts for next 60 days.
+
+  ```
+  #Forecast Window
+days = 180
+
+sarima_forecast = sarima_model_fit.forecast(days)
+sarima_forecast_series = pd.Series(sarima_forecast, index=sarima_forecast.index)
+
+  #Since negative orders are not possible we can trim them.
+sarima_forecast_series[sarima_forecast_series < 0] = 0
+```
+
+
+**Plotting Forecast using baseline SARIMA**
 

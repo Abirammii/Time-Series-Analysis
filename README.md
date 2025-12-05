@@ -120,9 +120,9 @@ where *price* represents the unit price of an item and *qty* (renamed from order
 
   ### Scraping Holiday Data
 
-To improve the accuracy of sales forecasting, holiday information was collected since holidays can significantly influence purchasing behavior. A simple web scraping approach was used to extract Brazilian national holidays from the specified [website](https://www.officeholidays.com/countries/brazil/).
+- To improve the accuracy of sales forecasting, holiday information was collected since holidays can significantly influence purchasing behavior. A simple web scraping approach was used to extract Brazilian national holidays from the specified [website](https://www.officeholidays.com/countries/brazil/).
 
-By appending the base URL with the years **2017** and **2018**, we retrieved the corresponding pages containing holiday data for those years and incorporated them into the time series modeling process.
+- By appending the base URL with the years **2017** and **2018**, we retrieved the corresponding pages containing holiday data for those years and incorporated them into the time series modeling process.
 
 ```
   # For web scraping (the requests package allows you to send HTTP requests using Python)
@@ -159,5 +159,6 @@ holidays_df=pd.DataFrame(index=[holidays], data=np.ones(len(holidays)), columns=
 holidays_df.head()
 ```
 
-
+- This dataframe has only one column 'is_holiday' which is one meaning it is an holiday. The index are the dates of the holiday.
+- These dates are for year 2017 and 2018. The index is not continuous, these are just the holiday dates. We have saved the data like this so that we can use it for time series.
 
